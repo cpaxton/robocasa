@@ -176,19 +176,15 @@ class Fixture(MujocoXMLObjectRobocasa):
             self.set_scale_from_size(size, max_size)
 
         # based on exterior points, overwritten by subclasses (e.g. Counter) that do not have such sites
-        self.size = np.array([self.width, self.depth, self.height])
+        w = self.width if self.width is not None else 1.0
+        d = self.depth if self.depth is not None else 1.0
+        h = self.height if self.height is not None else 1.0
+        self.size = np.array([w, d, h])
 
         # set offset between center of object and center of exterior bounding boxes
-        if self.width is not None:
+        if self.width is not None and ("main" in self._regions or "bbox" in self._regions):
             try:
-                # calculate based on bounding points
-                reg_key = None
-                if "main" in self._regions:
-                    reg_key = "main"
-                elif "bbox" in self._regions:
-                    reg_key = "bbox"
-                else:
-                    raise ValueError
+                reg_key = "main" if "main" in self._regions else "bbox"
                 p0 = self._regions[reg_key]["p0"]
                 px = self._regions[reg_key]["px"]
                 py = self._regions[reg_key]["py"]
@@ -201,10 +197,9 @@ class Fixture(MujocoXMLObjectRobocasa):
                     ]
                 )
             except KeyError:
-                self.origin_offset = [0, 0, 0]
+                self.origin_offset = np.array([0, 0, 0])
         else:
-            self.origin_offset = [0, 0, 0]
-        self.origin_offset = np.array(self.origin_offset)
+            self.origin_offset = np.array([0, 0, 0])
 
         # placement config, for determining where to place fixture (most fixture will not use this)
         self._placement = placement
@@ -267,15 +262,18 @@ class Fixture(MujocoXMLObjectRobocasa):
         cur_size = [self.width, self.depth, self.height]
 
         for (i, t) in enumerate(size):
-            if t is not None:
+            if t is not None and cur_size[i] is not None:
                 scale[i] = t / cur_size[i]
+            elif t is not None and cur_size[i] is None:
+                # Model has no reg_ bbox (e.g. uses sites only); use scale 1.0 for this dimension
+                scale[i] = 1.0
 
         scale[0] = scale[0] or scale[2] or scale[1]
         scale[1] = scale[1] or scale[0] or scale[2]
         scale[2] = scale[2] or scale[0] or scale[1]
         scale = np.array(scale)
 
-        if max_size is not None:
+        if max_size is not None and all(c is not None for c in cur_size):
             # recompute the scaling as needed
             scaling_adjustment = 1.0
             for i in range(3):

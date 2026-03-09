@@ -227,6 +227,11 @@ class Counter(ProcGenFixture):
                 geoms[geom_name].append(g)
         return geoms
 
+    # Fallback interior object dimensions when fixture has no reg_main/reg_bbox (e.g. site-only assets)
+    _INTERIOR_OBJ_DEFAULT_WIDTH = 0.4
+    _INTERIOR_OBJ_DEFAULT_DEPTH = 0.4
+    _INTERIOR_OBJ_DEFAULT_HEIGHT = 0.15
+
     def _place_interior_obj(self):
         """
         calculates and sets the position of the sink,
@@ -242,6 +247,11 @@ class Counter(ProcGenFixture):
 
         x_percent, y_percent = self.obj_x_percent, self.obj_y_percent
 
+        # Use interior object dimensions; fallback when fixture has no reg_ (e.g. site-only models)
+        w = self.interior_obj.width if self.interior_obj.width is not None else self._INTERIOR_OBJ_DEFAULT_WIDTH
+        d = self.interior_obj.depth if self.interior_obj.depth is not None else self._INTERIOR_OBJ_DEFAULT_DEPTH
+        h = self.interior_obj.height if self.interior_obj.height is not None else self._INTERIOR_OBJ_DEFAULT_HEIGHT
+
         depth_padding = self.overhang + 0.015  # also add the thickness of cabinet doors
 
         # remove overhang from consideration for placement
@@ -253,27 +263,27 @@ class Counter(ProcGenFixture):
 
         # respect boundaires: limit range of x_percent and y_percent so interior object doesn't overflow
         gap = 0.02
-        max_x_percent = (top_size[0] - gap - self.interior_obj.width / 2) / top_size[0]
+        max_x_percent = (top_size[0] - gap - w / 2) / top_size[0]
         x_percent = np.clip(x_percent, 1 - max_x_percent, max_x_percent)
-        max_y_percent = (top_size[1] - gap - self.interior_obj.depth / 2) / top_size[1]
+        max_y_percent = (top_size[1] - gap - d / 2) / top_size[1]
         y_percent = np.clip(y_percent, 1 - max_y_percent, max_y_percent)
 
         # calculate and set the position of sink
         interior_origin = [
             self.pos[0] + (x_percent - 0.50) * top_size[0],
             self.pos[1] + depth_padding / 2 + (y_percent - 0.50) * top_size[1],
-            self.pos[2] + top_size[2] / 2 - self.interior_obj.height / 2,
+            self.pos[2] + top_size[2] / 2 - h / 2,
         ]
 
         self.interior_obj.set_origin(interior_origin)
 
         # calculate the size of padding around the sink
-        left_pad = x_percent * top_size[0] - self.interior_obj.width / 2
-        right_pad = (1 - x_percent) * top_size[0] - self.interior_obj.width / 2
+        left_pad = x_percent * top_size[0] - w / 2
+        right_pad = (1 - x_percent) * top_size[0] - w / 2
         front_pad = (
-            y_percent * top_size[1] - self.interior_obj.depth / 2 + depth_padding
+            y_percent * top_size[1] - d / 2 + depth_padding
         )  # add the depth_padding to the front
-        back_pad = (1 - y_percent) * top_size[1] - self.interior_obj.depth / 2
+        back_pad = (1 - y_percent) * top_size[1] - d / 2
 
         return [left_pad, right_pad, front_pad, back_pad]
 

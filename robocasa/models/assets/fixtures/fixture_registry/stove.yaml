@@ -1,6 +1,9 @@
 default:
   xml: fixtures/stoves/basic_sleek_induc
 
+Stove074:
+  xml: fixtures/stoves/basic_sleek_induc
+
 basic_sleek_induc:
   xml: fixtures/stoves/basic_sleek_induc
 

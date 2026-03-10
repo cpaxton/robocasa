@@ -3,6 +3,9 @@ default:
   size: [0.12, null, null]
   xml: fixtures/accessories/knife_blocks/light_wood_3
 
+KnifeBlock008:
+  xml: fixtures/accessories/knife_blocks/light_wood_3
+
 light_wood_3:
   xml: fixtures/accessories/knife_blocks/light_wood_3
 

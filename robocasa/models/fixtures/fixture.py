@@ -176,9 +176,12 @@ class Fixture(MujocoXMLObjectRobocasa):
             self.set_scale_from_size(size, max_size)
 
         # based on exterior points, overwritten by subclasses (e.g. Counter) that do not have such sites
-        w = self.width if self.width is not None else 1.0
-        d = self.depth if self.depth is not None else 1.0
-        h = self.height if self.height is not None else 1.0
+        # Use small default when no reg_ (site-only assets) so placement fits in counter regions
+        # (counter strips are often ~0.3 after margin; object must fit for obj_in_region)
+        _default_w, _default_d, _default_h = 0.24, 0.24, 0.24
+        w = self.width if self.width is not None else _default_w
+        d = self.depth if self.depth is not None else _default_d
+        h = self.height if self.height is not None else _default_h
         self.size = np.array([w, d, h])
 
         # set offset between center of object and center of exterior bounding boxes
@@ -443,10 +446,26 @@ class Fixture(MujocoXMLObjectRobocasa):
             reg_key = "main"
         elif "bbox" in self._regions:
             reg_key = "bbox"
-        else:
-            raise ValueError
 
-        return self._regions[reg_key]["p0"]
+        if reg_key is not None:
+            return self._regions[reg_key]["p0"]
+        # No reg_: bottom of box from self.size (relative to center)
+        h = np.array(self.size) / 2
+        return np.array([-h[0], -h[1], -h[2]])
+
+    @property
+    def top_offset(self):
+        reg_key = None
+        if "main" in self._regions:
+            reg_key = "main"
+        elif "bbox" in self._regions:
+            reg_key = "bbox"
+
+        if reg_key is not None:
+            return self._regions[reg_key]["pz"]
+        # No reg_: top face center from self.size (relative to center)
+        h = np.array(self.size) / 2
+        return np.array([0.0, 0.0, h[2]])
 
     @property
     def width(self):
@@ -516,19 +535,21 @@ class Fixture(MujocoXMLObjectRobocasa):
         for (name, reg) in region_dict.items():
             pos = np.array(reg["pos"])
             halfsize = np.array(reg["halfsize"])
-            if update_elem:
-                self._regions[name]["elem"].set("pos", array_to_string(pos))
-                self._regions[name]["elem"].set("size", array_to_string(halfsize))
-
             # compute boundary points for reference
             p0 = pos + np.array([-halfsize[0], -halfsize[1], -halfsize[2]])
             px = pos + np.array([halfsize[0], -halfsize[1], -halfsize[2]])
             py = pos + np.array([-halfsize[0], halfsize[1], -halfsize[2]])
             pz = pos + np.array([-halfsize[0], -halfsize[1], halfsize[2]])
-            self._regions[name]["p0"] = p0
-            self._regions[name]["px"] = px
-            self._regions[name]["py"] = py
-            self._regions[name]["pz"] = pz
+            if name not in self._regions:
+                self._regions[name] = dict(p0=p0, px=px, py=py, pz=pz)
+            else:
+                self._regions[name]["p0"] = p0
+                self._regions[name]["px"] = px
+                self._regions[name]["py"] = py
+                self._regions[name]["pz"] = pz
+            if update_elem and "elem" in self._regions[name]:
+                self._regions[name]["elem"].set("pos", array_to_string(pos))
+                self._regions[name]["elem"].set("size", array_to_string(halfsize))
 
     def get_ext_sites(self, all_points=False, relative=True):
         """
@@ -547,15 +568,23 @@ class Fixture(MujocoXMLObjectRobocasa):
             reg_key = "main"
         elif "bbox" in self._regions:
             reg_key = "bbox"
-        else:
-            raise ValueError
 
-        sites = [
-            self._regions[reg_key]["p0"],
-            self._regions[reg_key]["px"],
-            self._regions[reg_key]["py"],
-            self._regions[reg_key]["pz"],
-        ]
+        if reg_key is not None:
+            sites = [
+                self._regions[reg_key]["p0"],
+                self._regions[reg_key]["px"],
+                self._regions[reg_key]["py"],
+                self._regions[reg_key]["pz"],
+            ]
+        else:
+            # No reg_ (e.g. site-only assets): use self.size as half-extents
+            h = np.array(self.size) / 2
+            sites = [
+                np.array([-h[0], -h[1], -h[2]]),
+                np.array([h[0], -h[1], -h[2]]),
+                np.array([-h[0], h[1], -h[2]]),
+                np.array([-h[0], -h[1], h[2]]),
+            ]
 
         if all_points:
             p0, px, py, pz = sites

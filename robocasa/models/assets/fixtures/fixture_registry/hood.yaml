@@ -1,6 +1,9 @@
 default:
   xml: fixtures/hoods/simple_silver
 
+RangeHood006:
+  xml: fixtures/hoods/simple_silver
+
 simple_silver:
   xml: fixtures/hoods/simple_silver
 

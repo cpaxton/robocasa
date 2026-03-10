@@ -1014,8 +1014,15 @@ class Drawer(Cabinet):
         Args:
             env (MujocoEnv): environment
         """
+        reg_int_name = f"{self.naming_prefix}reg_int"
+        # Stack units or other cabinet variants may use reg_level0/reg_level1
+        # instead of reg_int; skip update when the geom is not in the model.
+        if reg_int_name not in env.sim.model.geom_names:
+            return
+        if "int" not in self._regions or "elem" not in self._regions["int"]:
+            return
         pos = get_fixture_to_point_rel_offset(
-            self, env.sim.data.get_geom_xpos(f"{self.naming_prefix}reg_int")
+            self, env.sim.data.get_geom_xpos(reg_int_name)
         )
         # use prev half size since this wont change
         hs = s2a(self._regions["int"]["elem"].get("size"))

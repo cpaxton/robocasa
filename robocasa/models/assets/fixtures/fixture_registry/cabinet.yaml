@@ -53,6 +53,12 @@ wood_grain_shelves_2:
 
 
 #### panel shapes ####
+# Aliases for style001 when mesh panels are not in assets (use slab)
+CabinetDoorPanel047:
+  panel_type: slab
+CabinetHandle003:
+  handle_type: bar
+
 slab:
   panel_type: slab
 raised:

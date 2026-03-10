@@ -15,5 +15,8 @@ fancy:
 basic_popup_2:
   xml: fixtures/toasters/basic_popup_2
 
+Toaster002:
+  xml: fixtures/toasters/basic_popup
+
 basic_popup:
   xml: fixtures/toasters/basic_popup

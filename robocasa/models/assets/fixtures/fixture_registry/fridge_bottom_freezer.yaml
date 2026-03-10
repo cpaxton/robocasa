@@ -28,7 +28,7 @@ Refrigerator049:
   xml: fixtures/fridges/Refrigerator049
 
 Refrigerator051:
-  xml: fixtures/fridges/Refrigerator051
+  xml: fixtures/fridges/four_doors
 
 Refrigerator053:
   xml: fixtures/fridges/Refrigerator053

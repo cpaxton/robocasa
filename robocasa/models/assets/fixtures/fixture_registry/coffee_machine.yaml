@@ -3,6 +3,10 @@ default:
   size: [null, null, 0.44]
   xml: fixtures/coffee_machines/delonghi_espresso
   
+CoffeeMachine067:
+  size: [null, null, 0.44]
+  xml: fixtures/coffee_machines/delonghi_espresso
+
 delonghi_espresso:
   size: [null, null, 0.44]
   xml: fixtures/coffee_machines/delonghi_espresso

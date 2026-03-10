@@ -3,6 +3,9 @@ default:
   size: [null, null, 0.35]
   xml: fixtures/accessories/paper_towel_holders/holder_2
   
+PaperTowelHolder012:
+  xml: fixtures/accessories/paper_towel_holders/holder_2
+
 holder_2:
   xml: fixtures/accessories/paper_towel_holders/holder_2
 

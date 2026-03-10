@@ -1232,6 +1232,12 @@ class Kitchen(ManipulationEnv, metaclass=KitchenEnvMeta):
         actuator = root.find("actuator")
         asset = root.find("asset")
         meshes = asset.findall("mesh")
+        # MuJoCo 2.x requires mesh assets to specify inertia (e.g. inertia="shell") when used
+        # by geoms, to avoid "mesh volume is too small" / "inertia should be specified in
+        # the mesh asset" errors. Ensure all meshes have it.
+        for mesh in meshes:
+            if mesh.get("inertia") is None:
+                mesh.set("inertia", "shell")
         textures = asset.findall("texture")
         all_elements = meshes + textures
 

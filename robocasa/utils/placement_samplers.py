@@ -237,9 +237,8 @@ class UniformRandomSampler(ObjectPositionSampler):
                 maximum -= buffer
 
         if minimum > maximum:
-            raise PlacementError(
-                f"Invalid x range for placement initializer: ({minimum}, {maximum})"
-            )
+            # Region too small for buffer; use full range and let obj_in_region filter
+            minimum, maximum = self.x_range[0], self.x_range[1]
 
         return self.rng.uniform(high=maximum, low=minimum)
 
@@ -258,9 +257,8 @@ class UniformRandomSampler(ObjectPositionSampler):
                 maximum -= buffer
 
         if minimum > maximum:
-            raise PlacementError(
-                f"Invalid y range for placement initializer: ({minimum}, {maximum})"
-            )
+            # Region too small for buffer; use full range and let obj_in_region filter
+            minimum, maximum = self.y_range[0], self.y_range[1]
 
         return self.rng.uniform(high=maximum, low=minimum)
 
@@ -409,7 +407,7 @@ class UniformRandomSampler(ObjectPositionSampler):
                     return True
                 return False
 
-            for i in range(5000):  # 5000 retries
+            for i in range(20000):  # 20000 retries (small regions / many fixtures need more tries)
                 # sample object coordinates
                 relative_x = self._sample_x(obj_size)
                 relative_y = self._sample_y(obj_size)

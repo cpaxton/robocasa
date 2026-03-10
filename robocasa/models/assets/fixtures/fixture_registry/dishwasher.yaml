@@ -2,6 +2,9 @@ default:
   name: dishwasher
   size: [0.65, null, null]
 
+Dishwasher042:
+  xml: fixtures/dishwashers/pack_1
+
 pack_1:
   xml: fixtures/dishwashers/pack_1
 

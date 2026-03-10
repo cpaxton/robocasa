@@ -1,6 +1,9 @@
 default:
   xml: fixtures/ovens/pack_1
 
+Oven033:
+  xml: fixtures/ovens/pack_1
+
 pack_1:
   xml: fixtures/ovens/pack_1
 

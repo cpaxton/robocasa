@@ -3,6 +3,9 @@ default:
   scale: 0.40
   protrusion: 0.08
   
+UtensilRack004:
+  xml: fixtures/accessories/utensil_racks/metal
+
 metal:
   xml: fixtures/accessories/utensil_racks/metal
 

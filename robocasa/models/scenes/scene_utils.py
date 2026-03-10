@@ -135,6 +135,10 @@ def load_style_config(style, fixture_config):
             additional_config = default_configs[cfg_id]
             for k, v in additional_config.items():
                 config[k] = v
+        elif isinstance(cfg_id, str) and cfg_id.startswith("gentex"):
+            # Use default config when generative texture style is not in the
+            # fixture registry (e.g. without full generative_textures pack).
+            pass
         else:
             raise ValueError(
                 'Did not find style that matches "{}" for '

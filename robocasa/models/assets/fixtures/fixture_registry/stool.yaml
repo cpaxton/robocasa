@@ -1,7 +1,10 @@
 default:
   name: chair
   size: [null, null, 1.0]
-  
+
+Stool009:
+  xml: fixtures/accessories/stools/rattan_stool
+
 rattan_stool:
   xml: fixtures/accessories/stools/rattan_stool
 

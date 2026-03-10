@@ -232,6 +232,13 @@ class Counter(ProcGenFixture):
     _INTERIOR_OBJ_DEFAULT_DEPTH = 0.4
     _INTERIOR_OBJ_DEFAULT_HEIGHT = 0.15
 
+    def _get_interior_obj_dims(self):
+        """Return (width, depth, height) of interior object with fallbacks when reg_ is missing."""
+        w = self.interior_obj.width if self.interior_obj.width is not None else self._INTERIOR_OBJ_DEFAULT_WIDTH
+        d = self.interior_obj.depth if self.interior_obj.depth is not None else self._INTERIOR_OBJ_DEFAULT_DEPTH
+        h = self.interior_obj.height if self.interior_obj.height is not None else self._INTERIOR_OBJ_DEFAULT_HEIGHT
+        return (w, d, h)
+
     def _place_interior_obj(self):
         """
         calculates and sets the position of the sink,
@@ -247,10 +254,7 @@ class Counter(ProcGenFixture):
 
         x_percent, y_percent = self.obj_x_percent, self.obj_y_percent
 
-        # Use interior object dimensions; fallback when fixture has no reg_ (e.g. site-only models)
-        w = self.interior_obj.width if self.interior_obj.width is not None else self._INTERIOR_OBJ_DEFAULT_WIDTH
-        d = self.interior_obj.depth if self.interior_obj.depth is not None else self._INTERIOR_OBJ_DEFAULT_DEPTH
-        h = self.interior_obj.height if self.interior_obj.height is not None else self._INTERIOR_OBJ_DEFAULT_HEIGHT
+        w, d, h = self._get_interior_obj_dims()
 
         depth_padding = self.overhang + 0.015  # also add the thickness of cabinet doors
 
@@ -431,10 +435,11 @@ class Counter(ProcGenFixture):
                 "than front padding ({:.2f})".format(front_pad)
             )
 
+        interior_w, interior_d, _ = self._get_interior_obj_dims()
         # calculate the (full) size of each component
         top_size = dict(
-            back=[self.interior_obj.width, back_pad, h - th],
-            front=[self.interior_obj.width, front_pad - self.overhang, h - th],
+            back=[interior_w, back_pad, h - th],
+            front=[interior_w, front_pad - self.overhang, h - th],
             left=[left_pad, d - self.overhang, h - th],
             right=[right_pad, d - self.overhang, h - th],
         )
@@ -442,10 +447,10 @@ class Counter(ProcGenFixture):
         # all coordinates are the bottom-left corners
         # the origin is the bottom-left corner of the entire fixture
         top_pos = dict(
-            back=[left_pad, front_pad + self.interior_obj.depth, -th],
+            back=[left_pad, front_pad + interior_d, -th],
             front=[left_pad, self.overhang, -th],
             left=[0, self.overhang, -th],
-            right=[left_pad + self.interior_obj.width, self.overhang, -th],
+            right=[left_pad + interior_w, self.overhang, -th],
         )
 
         base_size = dict(
@@ -607,7 +612,7 @@ class Counter(ProcGenFixture):
         env,
         ref=None,
         loc="nn",
-        top_size=(0.40, 0.25),
+        top_size=(0.20, 0.15),
         ref_rot_flag=False,
         full_depth_region=False,
     ):
@@ -773,10 +778,13 @@ class Counter(ProcGenFixture):
                     if min_dist is None or g_dist < min_dist:
                         chosen_top = g
                         min_dist = g_dist
-                valid_geoms.append(chosen_top)
+                if chosen_top is not None:
+                    valid_geoms.append(chosen_top)
+                else:
+                    valid_geoms = all_geoms
             elif loc in ["left_right", "right", "left"]:
                 if geom_containing_fixture is not None:
-                    valid_geoms.append(g)
+                    valid_geoms.append(geom_containing_fixture)
                 else:
                     # add all regions to the left
                     if loc in ["left_right", "left"]:
@@ -888,6 +896,18 @@ class Counter(ProcGenFixture):
                                 offset[0] = ref_pos[0]
                                 size[0] = new_size
 
+                    reset_regions[f"geom_{geom_i}"] = dict(size=size, offset=offset)
+                    geom_i += 1
+
+            # If ref-based shrink left no regions (strips too narrow), use full geom
+            # so placement can still find a valid region
+            if len(reset_regions) == 0 and valid_geoms:
+                geom_i = 0
+                for g in valid_geoms:
+                    top_pos = s2a(g.get("pos"))
+                    top_half_size = s2a(g.get("size"))
+                    offset = [top_pos[0], top_pos[1], self.size[2] / 2]
+                    size = [top_half_size[0] * 2, top_half_size[1] * 2]
                     reset_regions[f"geom_{geom_i}"] = dict(size=size, offset=offset)
                     geom_i += 1
 
